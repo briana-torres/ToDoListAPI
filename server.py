@@ -79,6 +79,39 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         else:
             self.send_response(404)
             self.end_headers()
+            
+    def do_PUT(self):
+        path_parts = self.path.split('/')
+        if len(path_parts) == 3 and path_parts[1] == 'tasks':
+            try:
+                task_id = int(path_parts[2])
+            except ValueError:
+                self.send_response(400) # Bad Request
+                self.end_headers()
+                return
+
+            content_length = int(self.headers['Content-Length'])
+            put_data = self.rfile.read(content_length)
+            updated_task_data = json.loads(put_data)
+            
+            # Find and update the task
+            task_found = False
+            for task in tasks:
+                if task['id'] == task_id:
+                    if 'title' in updated_task_data:
+                        task['title'] = updated_task_data['title']
+                        task_found = True
+                        break
+
+            if task_found:
+                self.send_response(200)  # OK
+                self.end_headers()
+            else:
+                self.send_response(404)  # Not Found
+                self.end_headers()
+        else:
+            self.send_response(404)
+            self.end_headers()
 
 
 if __name__ == '__main__':
