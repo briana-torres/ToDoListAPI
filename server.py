@@ -1,7 +1,8 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 
-tasks = [{"id": 1, "title": "Sample Task 1"}, {"id": 2, "title": "Sample Task 2"}]
+tasks = []
+next_id = 1
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
 
@@ -24,6 +25,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             
             
     def do_POST(self):
+        global next_id
         
         if self.path == '/tasks':
             content_length = int(self.headers['Content-Length'])
@@ -31,13 +33,13 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             task_data = json.loads(post_data)
 
             if 'title' in task_data:
-                new_id = len(tasks) + 1
-                task_data['id'] = new_id
+                task_data['id'] = next_id
                 tasks.append(task_data)
                 self.send_response(201) # 201 is the HTTP status code for "Created"
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
-                self.wfile.write(bytes(json.dumps({"message": "Task added", "id": new_id}), "utf8"))
+                self.wfile.write(bytes(json.dumps({"message": "Task added", "id": next_id}), "utf8"))
+                next_id += 1
             else:
                 self.send_response(400)
                 self.send_header('Content-type', 'application/json')
@@ -48,6 +50,36 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'application/json')
             self.end_headers()
             self.wfile.write(bytes(json.dumps({"message": "Not Found"}), "utf8"))
+            
+    def do_DELETE(self):
+        path_parts = self.path.split('/')
+        if len(path_parts) == 3 and path_parts[1] == 'tasks':
+            try:
+                task_id = int(path_parts[2])
+            except ValueError:
+                self.send_response(400)
+                self.end_headers()
+                return
+
+            task_found = False
+            for i, task in enumerate(tasks):
+                if task['id'] == task_id:
+                    del tasks[i]
+                    task_found = True
+                    break
+
+            if task_found:
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(bytes(json.dumps({"message": "Task deleted", "id": task_id}), "utf8"))
+            else:
+                self.send_response(404)
+                self.end_headers()
+                self.wfile.write(bytes(json.dumps({"message": "Not Found"}), "utf8"))
+        else:
+            self.send_response(404)
+            self.end_headers()
+
 
 if __name__ == '__main__':
     # Server settings
