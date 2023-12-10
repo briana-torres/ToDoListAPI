@@ -34,8 +34,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
                 new_id = len(tasks) + 1
                 task_data['id'] = new_id
                 tasks.append(task_data)
-
-                self.send_response(201)
+                self.send_response(201) # 201 is the HTTP status code for "Created"
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 self.wfile.write(bytes(json.dumps({"message": "Task added", "id": new_id}), "utf8"))
