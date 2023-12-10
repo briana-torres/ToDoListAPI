@@ -22,6 +22,7 @@ Create a basic RESTful API to manage a To-Do list, where you can add, view, and 
    - **GET** to retrieve the list of tasks or a specific task.
    - **POST** to add a new task.
    - **DELETE** to remove a task.
+   - **PUT** to update a task.
 
 3. **Manage In-Memory Data:**
    - Use a simple Python dictionary or list to store tasks.
